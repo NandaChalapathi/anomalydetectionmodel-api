@@ -61,8 +61,10 @@ def Decision_Function(Data, Scaled_Data):
     return iForest_Score, LOF_Score, iForest_Prediction, LOF_Prediction
 
 def Normalized(iForestThreshold, LOFThreshold, iForest_Score, LOF_Score):
-    iForest_Normalized = (iForestThreshold < iForest_Score).mean()
-    LOF_Normalized = (LOFThreshold < LOF_Score).mean()
+    i_min, i_max = np.min(iForestThreshold), np.max(iForestThreshold)
+    l_min, l_max = np.min(LOFThreshold), np.max(LOFThreshold)
+    iForest_Normalized = (iForest_Score - i_min) / (i_max - i_min)
+    LOF_Normalized = (LOF_Score - l_min) / (l_max - l_min)
     return iForest_Normalized, LOF_Normalized
 
 def EnsembleScore(iForest_Score, LOF_Score):
@@ -80,9 +82,13 @@ def label_and_risk(Score, threshold):
 
 def ModelConfidenceAgreement(iForest_Prediction, LOF_Prediction,
                              iForest_Score, LOF_Score):
-    Confidence = 1 / (1 + np.exp(-5 * abs(iForest_Score - LOF_Score)))
-    Agreement = 1 if iForest_Prediction == LOF_Prediction else 0
-    return Confidence, Agreement
+    iForest_conf = (iForestThreshold < iForest_Score).mean()
+    LOF_conf = (LOFThreshold < LOF_Score).mean()
+    confidence = (iForest_conf + LOF_conf) / 2
+    agreement = 1 if iForest_Prediction == LOF_Prediction else 0
+    if agreement == 0:
+        confidence *= 0.7
+    return confidence, agreement
 
 def Action(Score):
     if Score < 0.2:
