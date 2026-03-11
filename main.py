@@ -186,13 +186,13 @@ def metadata(request: Request):
         {"request": request}
     ) 
 
-#@app.get("/documentation", response_class=HTMLResponse)
-#def documentation(request: Request):
-#    print(f"[{datetime.now().replace(microsecond=0)}] API Request Received")
-#    return templates.TemplateResponse(
-#        "api-documentation.html",
-#        {"request": request}
-#    ) 
+@app.get("/documentation", response_class=HTMLResponse)
+def documentation(request: Request):
+    print(f"[{datetime.now().replace(microsecond=0)}] API Request Received")
+    return templates.TemplateResponse(
+        "api-documentation.html",
+        {"request": request}
+    ) 
 
 @app.post("/predict")
 def predict(data: UserInput):
