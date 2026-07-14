@@ -60,11 +60,11 @@ def Decision_Function(Data, Scaled_Data):
     LOF_Prediction = LOF.predict(Scaled_Data)[0]
     return iForest_Score, LOF_Score, iForest_Prediction, LOF_Prediction
 
-def Normalized(iForestThreshold, LOFThreshold, iForest_Score, LOF_Score):
-    i_min, i_max = np.min(iForestThreshold), np.max(iForestThreshold)
-    l_min, l_max = np.min(LOFThreshold), np.max(LOFThreshold)
-    iForest_Normalized = (iForest_Score - i_min) / (i_max - i_min)
-    LOF_Normalized = (LOF_Score - l_min) / (l_max - l_min)
+def Normalization(iForestThreshold, LOFThreshold, iForest_Score, LOF_Score):
+    iForest_Min, iForest_Max = np.min(iForestThreshold), np.max(iForestThreshold)
+    LOF_Min, LOF_Max = np.min(LOFThreshold), np.max(LOFThreshold)
+    iForest_Normalized = (iForest_Score - iForest_Min) / (iForest_Max - iForest_Min)
+    LOF_Normalized = (LOF_Score - LOF_Min) / (LOF_Max - LOF_Min)
     return iForest_Normalized, LOF_Normalized
 
 def EnsembleScore(iForest_Score, LOF_Score):
@@ -82,9 +82,9 @@ def label_and_risk(Score, threshold):
 
 def ModelConfidenceAgreement(iForest_Prediction, LOF_Prediction,
                              iForest_Score, LOF_Score):
-    iForest_conf = (iForestThreshold < iForest_Score).mean()
-    LOF_conf = (LOFThreshold < LOF_Score).mean()
-    confidence = (iForest_conf + LOF_conf) / 2
+    iForest_Confidence = (iForestThreshold < iForest_Score).mean()
+    LOF_Confidence = (LOFThreshold < LOF_Score).mean()
+    confidence = (iForest_Confidence + LOF_Confidence) / 2
     agreement = 1 if iForest_Prediction == LOF_Prediction else 0
     if agreement == 0:
         confidence *= 0.7
@@ -117,7 +117,7 @@ def Predict(Data, threshold):
     iForest_Score, LOF_Score, iForest_Prediction, LOF_Prediction = Decision_Function(
         Data, Scaled_Data
     )
-    iForest_Normalized, LOF_Normalized = Normalized(
+    iForest_Normalized, LOF_Normalized = Normalization(
         iForestThreshold,
         LOFThreshold,
         iForest_Score,
