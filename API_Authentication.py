@@ -4,8 +4,10 @@ from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import HTTPException, Security
 from fastapi.security.api_key import APIKeyHeader
+
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / ".env")
+
 API_Key_Header = APIKeyHeader(
     name="X-API-Key",
     auto_error=False
@@ -38,20 +40,32 @@ def verifyAPI_Key(
         )
         response.raise_for_status()
         result = response.json()
+        if result.get("rate_limited") is True:
+            raise HTTPException(
+                status_code=429,
+                detail={
+                    "message": result.get("message"),
+                    "daily_limit": result.get("daily_limit"),
+                    "daily_api_calls": result.get("daily_api_calls"),
+                    "remaining_requests": 0,
+                    "reset_timezone": result.get("reset_timezone")
+                }
+            )
         if result.get("valid") is not True:
             raise HTTPException(
                 status_code=401,
-                detail=result.get(
-                    "message",
-                    "Invalid API Key"
-                )
+                detail=result.get("message", "Invalid API Key")
             )
-        print("API Key verified successfully")
+        print(
+            f"API Key verified. "
+            f"User: {result.get('user_id')}, "
+            f"Daily calls: {result.get('daily_api_calls')}"
+        )
+
         return candidateAPI_Key
     except HTTPException:
         raise
-    except requests.RequestException as e:
-        print("Google Sheets Connection Error:", e)
+    except requests.RequestException:
         raise HTTPException(
             status_code=503,
             detail="API Key verification service unavailable"
