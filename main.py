@@ -1,10 +1,8 @@
 from dotenv import load_dotenv; load_dotenv()
 from API_Authentication  import API_Key_Header, verifyAPI_Key
-from fastapi.responses import HTMLResponse
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
-from fastapi import Request 
-from fastapi import FastAPI, HTTPException, status
+from fastapi import Request, FastAPI, HTTPException, status
 from pydantic import BaseModel
 from fastapi.staticfiles import StaticFiles
 import warnings; warnings.filterwarnings('ignore')
@@ -20,8 +18,6 @@ app = FastAPI()
 templates = Jinja2Templates(directory="templates") 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-GOOGLE_SHEET_API_URL = os.getenv("GOOGLE_SHEET_API_URL")
-GOOGLE_SHEET_SECRET = os.getenv("GOOGLE_SHEET_SECRET")
 def loadNumpyFiles():
     try:
         Threshold_PATH = os.getenv("threshold")
