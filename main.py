@@ -14,7 +14,16 @@ import os
 import secrets
 from fastapi.security.api_key import APIKeyHeader
 from fastapi import Security
+from slowapi.errors import RateLimitExceeded
+from slowapi import Limiter 
+from API_RateLimiting import limiter, Rate_Limit_Handler
+from slowapi.middleware import SlowAPIMiddleware
+
 app = FastAPI()
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, Rate_Limit_Handler)
+app.middleware(SlowAPIMiddleware)
+
 templates = Jinja2Templates(directory="templates") 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -68,16 +77,19 @@ def Normalization(iForestThreshold, LOFThreshold, iForest_Score, LOF_Score):
     return iForest_Normalized, LOF_Normalized
 
 def EnsembleScore(iForest_Score, LOF_Score):
-    return (0.6 * iForest_Score + 0.4 * LOF_Score)
+    score = (0.6 * iForest_Score + 0.4 * LOF_Score)
+    return min(score,1.0)
 
 def label_and_risk(Score, threshold):
     Label = -1 if Score >= threshold else 1
-    if Score >= 0.80:
+    if 0.80 <= Score <= 1.00:
         Risk = "High"
-    elif Score >= 0.60:
+    elif 0.30 <= Score <= 0.79:
         Risk = "Medium"
-    else:
+    elif 0.00 <= Score <= 0.29:
         Risk = "Low"
+    else:
+        raise ValueError("Score must be between 0.00 and 1.00")
     return Label, Risk
 
 def ModelConfidenceAgreement(iForest_Prediction, LOF_Prediction,
@@ -195,7 +207,8 @@ def documentation(request: Request):
     ) 
 
 @app.post("/predict")
-def predict(data: UserInput, candidateAPI_Key: str = Security(verifyAPI_Key)):
+@limiter.limit("4/minute")
+def predict(request: Request, data: UserInput, candidateAPI_Key: str = Security(verifyAPI_Key)):
     try:
         UserData = pd.DataFrame([data.model_dump()])
         if UserData.empty:
