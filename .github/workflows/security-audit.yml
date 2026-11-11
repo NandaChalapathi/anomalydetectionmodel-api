@@ -4,11 +4,11 @@ name: ADM Security Audit
 on:
   push:
     branches:
-      - main
+    - adm_v2
 
   pull_request:
     branches:
-      - main
+    - adm_v2
 
   schedule:
     - cron: "30 2 * * *"
